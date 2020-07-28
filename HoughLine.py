@@ -2,11 +2,15 @@ import numpy as np
 import cv2 as cv
 
 good_ones = []
-numOfLines = 25
+numOfLines = 10 // Threshold would find atleast "numOfLines" lines
+change = 1500 // It will keep the lines that have L2 distance greater than the "change"
 
-Img = cv.imread('image Path', 0)
+Img = cv.imread('Image Path', 0)
 Img = cv.Canny(Img, 100, 300)
 Img = cv.resize(Img, (1280,720))
+
+def dist_L2(x1, x2, y1, y2):
+    return pow((pow((x2 - x1), 2) + pow((y2 - y1), 2)), 0.5)
 
 h, w = Img.shape
 
@@ -28,9 +32,15 @@ Threshold = np.sort(table.flatten())[-numOfLines]
 
 for d in range(2 * dist):
     for theta in range(len(thetas)):
-        if table[d, theta] > Threshold:
-            d -= dist
-            good_ones.append([d, theta])
+        if table[d, theta] >= Threshold:
+            flag = True
+            for [c_d, c_theta] in good_ones:
+                if dist_L2(d - dist, c_d, c_theta, theta) <= change :
+                    flag = False
+            if flag:
+                d -= dist
+                good_ones.append([d, theta])
+            
                 
 for [d, theta] in good_ones:
     x1 = 0
